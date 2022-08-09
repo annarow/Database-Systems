@@ -1,0 +1,196 @@
+\qecho Anna Waldron
+\qecho
+\qecho
+ALTER SEQUENCE employee_id_seq RESTART WITH 20;
+ALTER SEQUENCE meeting_id_seq RESTART WITH 120;
+BEGIN;
+
+\qecho 
+\qecho #1
+\qecho
+INSERT INTO Employee (name, EmployeeNumber)
+VALUES ('Farquar', 'X411123')
+RETURNING id AS newid;
+
+INSERT INTO PhoneInfo (employeeid, type, number)
+VALUES ('20', 'W', '123-9876'),
+	('20', 'H', '456-3333');
+ 
+SELECT employeenumber, employee.name  , phoneType.name,
+PhoneInfo.Number 
+FROM Employee
+	JOIN PhoneInfo  ON ( employee.id = phoneInfo.employeeid)
+	JOIN PhoneType ON ( phoneType.id = phoneInfo.type)
+WHERE employee.name ILIKE 'F%';
+
+\qecho 
+\qecho #2
+\qecho
+INSERT INTO Employee (name, EmployeeNumber)
+VALUES ('Amy', 'X412345'),
+	('Bert', 'X412346');
+
+SELECT employeenumber, employee.name
+FROM Employee
+WHERE Employeenumber like 'X4%'
+ORDER BY employeenumber;
+
+\qecho 
+\qecho #3
+\qecho
+INSERT INTO PhoneInfo(employeeid, type, number)
+VALUES ('21', 'P', '345-3456'),
+	('21', 'B', '123-4567');
+
+SELECT employeenumber, employee.name  , phoneType.name as PhoneType,
+PhoneInfo.Number
+FROM Employee
+	JOIN PhoneInfo  ON ( Employee.id = phoneInfo.employeeid)
+	JOIN PhoneType ON ( phoneType.id = phoneInfo.type)
+WHERE employee.employeenumber  LIKE 'X4%'
+ORDER BY employeenumber, phoneType;
+
+\qecho 
+\qecho #4
+\qecho
+UPDATE Employee
+SET name = 'Ardvark'
+WHERE employeenumber LIKE 'X412345';
+
+SELECT employeenumber, employee.name
+FROM Employee
+WHERE Employeenumber like 'X4%'
+order by employeenumber;
+
+\qecho 
+\qecho #5
+\qecho
+DELETE FROM Employee
+WHERE employeenumber IN ('X412346');
+
+SELECT employeenumber, name
+FROM Employee
+WHERE EmployeeNumber  LIKE 'X4%'
+ORDER BY NAME;
+
+\qecho 
+\qecho #6
+\qecho
+DELETE FROM PhoneInfo
+WHERE id IN (21);
+
+DELETE FROM Employee
+WHERE employeenumber IN ('X412345');
+
+SELECT employeenumber, name
+FROM Employee
+WHERE EmployeeNumber  LIKE 'X4%'
+ORDER BY NAME;
+
+\qecho 
+\qecho #7
+\qecho
+INSERT INTO Employee(name, employeenumber)
+VALUES ('New1', 'X434567'),
+	('New2', 'X434568');
+
+SELECT employeenumber, name 
+FROM Employee
+WHERE name ilike 'New%'
+ORDER BY EmployeeNumber;
+
+\qecho 
+\qecho #8
+\qecho
+INSERT INTO PhoneInfo(employeeid, type, number)
+VALUES ('23', 'B', '123-4567'),
+	('24', 'B', '123-4567');
+
+SELECT employeenumber, employee.name  , phoneType.name, PhoneInfo.Number 
+FROM Employee
+    JOIN PhoneInfo  ON ( Employee.id = phoneInfo.employeeid)
+    JOIN PhoneType ON ( phoneType.id = phoneInfo.type)
+WHERE employee.employeeNumber like 'X4%'
+ORDER BY employee.employeeNumber;
+
+\qecho 
+\qecho #9
+\qecho
+INSERT INTO Meeting(purpose, starttime, duration, creatorid, moderatorid, roomid)
+VALUES ('New Employee Orientation', '2019-04-05 15:00:00', '01:00:00',
+	(SELECT employee.ID FROM Employee WHERE employee.employeenumber LIKE 'X311234'), 
+	(SELECT employee.ID FROM Employee WHERE employee.employeenumber LIKE 'X311239'), 
+	(SELECT id FROM Room WHERE Roomnumber LIKE '104' AND building LIKE 'A'));
+
+SELECT room.roomNumber, building, startTime, duration, purpose, employee.name as creator
+FROM Meeting
+    JOIN room ON ( room.id = meeting.roomid)
+    JOIN employee ON ( employee.id = meeting.creatorid)
+ORDER BY starttime ;
+
+\qecho 
+\qecho #10
+\qecho
+INSERT INTO Attendees(meetingid, employeeid)
+VALUES ((SELECT id FROM Meeting WHERE purpose LIKE 'New%'), (SELECT id FROM Employee WHERE employeenumber LIKE 'X411123')),
+	((SELECT id FROM Meeting WHERE purpose LIKE 'New%'), (SELECT id FROM Employee WHERE employeenumber LIKE 'X434567')),
+	((SELECT id FROM Meeting WHERE purpose LIKE 'New%'), (SELECT id FROM Employee WHERE employeenumber LIKE 'X434568'));
+
+SELECT name, employeenumber 
+FROM Employee
+    JOIN Attendees ON Employee.id = Attendees.employeeid
+    JOIN Meeting  ON Meeting.id = Attendees.meetingid
+WHERE Meeting.purpose like 'New%'
+ORDER BY NAME;
+
+\qecho 
+\qecho #11
+\qecho
+UPDATE Meeting
+SET starttime = starttime + '00:30:00'
+WHERE purpose LIKE 'Staff';
+
+SELECT * 
+FROM Meeting
+WHERE purpose = 'Staff'
+ORDER BY starttime, roomid;
+
+\qecho 
+\qecho #12
+\qecho
+DELETE FROM Attendees
+WHERE employeeid IN (SELECT id FROM Employee WHERE employeenumber LIKE 'X411123');
+
+SELECT name, employeenumber 
+FROM Employee
+    JOIN Attendees ON Employee.id = Attendees.employeeid
+    JOIN Meeting  ON Meeting.id = Attendees.meetingid
+WHERE Meeting.purpose like 'New%'
+ORDER BY NAME;
+
+\qecho 
+\qecho #13
+\qecho
+UPDATE Meeting
+SET moderatorid = (SELECT id FROM Employee WHERE employeenumber LIKE 'X311248')
+WHERE purpose LIKE 'New Employee%';
+
+SELECT purpose, Employee.name as Moderator
+FROM Meeting
+    JOIN Employee ON employee.id = meeting.moderatorid
+WHERE meeting.purpose like 'New%';
+
+\qecho 
+\qecho #14
+\qecho
+UPDATE Meeting
+SET moderatorid = (SELECT id FROM Employee WHERE employeenumber LIKE 'X311237')
+WHERE moderatorid = (SELECT id FROM Employee WHERE employeenumber LIKE 'X311248');
+
+SELECT meeting.purpose, employee.name, employee.employeenumber
+FROM meeting
+    JOIN employee ON  meeting.moderatorid = employee.id
+WHERE employee.employeenumber IN ( 'X311248', 'X311237')
+ORDER BY  meeting.starttime;
+
+ROLLBACK;

@@ -1,0 +1,98 @@
+\qecho
+\qecho Anna Rowena Waldron
+\qecho
+\qecho #1
+\qecho 
+SELECT Room.building || ' ' || Room.roomnumber AS location, 
+	(Room.capacity * COUNT (*))::numeric(5,2) AS amount_due
+FROM Meeting
+	JOIN Room ON (Room.id = Meeting.roomid)
+GROUP BY location, capacity
+UNION
+SELECT Employee.name, (COUNT (*) * 15)::numeric(5,2) AS amount_due
+FROM Employee
+	JOIN PhoneInfo On (Employee.ID = PhoneInfo.employeeid)
+WHERE PhoneInfo.type = 'C'
+GROUP BY Employee.ID
+ORDER BY location;
+
+\qecho
+\qecho #2
+\qecho
+SELECT COALESCE(ShipperStatus.description, 'NoStatus') AS description, COUNT (*) AS number
+FROM Shipper
+	LEFT JOIN ShipperStatus ON (Shipper.statusid = ShipperStatus.id)
+GROUP BY description
+ORDER BY description;
+
+\qecho
+\qecho #3
+\qecho	
+SELECT barcode, COALESCE(color, 'Unknown') AS color, weight
+FROM Package
+WHERE Package.color LIKE 'Green' AND Package.weight > 25 OR Package.color LIKE 'Red' AND 
+	Package.weight > 30 OR color IS NULL AND Package.weight > 35
+ORDER BY color, barcode;
+
+\qecho
+\qecho #4
+\qecho
+SELECT COALESCE(Package.color, 'Unknown') AS color, SUM(Package.weight) AS total_weight
+FROM Package
+GROUP BY color
+ORDER BY color;
+
+\qecho
+\qecho #5
+\qecho
+SELECT Shipper.firstname, Shipper.lastname, Package.barcode, 
+	'At Terminal ' || Package.icao AS location
+FROM Shipper
+	JOIN Shipment ON( Shipper.id = Shipment.shipperid)
+	JOIN Package ON( Shipment.id = Package.shipmentid)
+WHERE Package.localid IS NOT NULL AND Package.icao IS NOT NULL AND Package.pickupdate IS NULL
+UNION
+SELECT Shipper.firstname, Shipper.lastname, Package.barcode, 
+	'En Route to ' || Shipment.destination AS location
+FROM Shipper
+	JOIN Shipment ON( Shipper.id = Shipment.shipperid)
+	JOIN Package ON( Shipment.id = Package.shipmentid)
+WHERE Package.flightid IS NOT NULL AND Package.pickupdate IS NULL
+UNION
+SELECT Shipper.firstname, Shipper.lastname, Package.barcode, 
+	'Picked up' AS location
+FROM Shipper
+	JOIN Shipment ON( Shipper.id = Shipment.shipperid)
+	JOIN Package ON( Shipment.id = Package.shipmentid)
+WHERE Package.localid IS NULL AND Package.icao IS NULL AND Package.pickupdate IS NOT NULL
+ORDER BY lastname, firstname, barcode;
+
+\qecho
+\qecho #6
+\qecho
+SELECT Shipper.lastname, Shipper.firstname, COALESCE(T1.profit + T2.profit, -0.50) AS profit
+FROM Shipper 
+	LEFT JOIN (SELECT Shipper.id, SUM((Package.weight * 0.15))::numeric(5,2) AS profit
+		FROM Shipper
+			JOIN Shipment ON (Shipper.id = Shipment.shipperid)
+			JOIN Package ON (Shipment.id = Package.shipmentid)
+		GROUP BY Shipper.id) AS T1 ON (T1.id = Shipper.id)
+	LEFT JOIN (SELECT Shipper.id, COUNT (*) AS profit
+		FROM Shipper
+			JOIN Shipment ON (Shipper.id = Shipment.shipperid)
+		GROUP BY Shipper.id) AS T2 ON (T1.id = T2.id)
+ORDER BY Shipper.lastname, Shipper.firstname;
+
+\qecho
+\qecho #7
+\qecho
+SELECT Airport.icao
+FROM Airport
+	LEFT JOIN (SELECT Airport.icao, location.localid
+		FROM Airport
+			JOIN Location ON ( Airport.icao = Location.icao)
+		WHERE location.localid = 'C' 
+		GROUP BY Airport.icao, location.localid) AS T1 ON (Airport.icao = T1.icao)
+WHERE T1.localid IS NULL
+GROUP BY Airport.icao
+ORDER BY Airport.icao; 

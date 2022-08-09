@@ -1,0 +1,92 @@
+\qecho Anna Rowena Waldron
+\qecho
+\qecho #1
+\qecho
+SELECT building, roomnum AS room_number
+FROM Room
+ORDER BY room_number, building;
+
+\qecho 
+\qecho #2
+\qecho
+SELECT building, roomnum AS room_number, capacity
+FROM Room
+WHERE capacity >= 10 AND capacity <= 15;
+
+\qecho
+\qecho #3
+\qecho
+SELECT name AS attendees
+FROM Meeting
+	JOIN Attendees ON ( Attendees.MeetingID = Meeting.ID)
+	JOIN Employee ON ( Employee.ID = Attendees.Employeeid)
+WHERE purpose = 'DB Issues'
+ORDER BY name; 
+
+\qecho
+\qecho #4
+\qecho
+SELECT starttime, duration, purpose
+FROM Meeting
+	JOIN Attendees ON ( Attendees.MeetingID = Meeting.ID)
+	JOIN Employee ON ( Employee.ID = Attendees.Employeeid)
+WHERE name = 'Max'
+ORDER BY starttime;
+
+\qecho
+\qecho #5
+\qecho
+SELECT starttime, duration, purpose, building, roomnum
+FROM Meeting
+	JOIN Room ON ( Meeting.RoomID = Room.ID)
+	JOIN Attendees ON ( Attendees.MeetingID = Meeting.ID)
+	JOIN Employee ON ( Employee.ID = Attendees.Employeeid)
+WHERE name = 'Alice'
+ORDER BY purpose DESC, starttime ASC;
+
+\qecho
+\qecho #6
+\qecho
+SELECT name, phone
+FROM Employee
+ORDER BY name;
+
+\qecho
+\qecho #7
+\qecho
+SELECT name AS organizer_name, purpose, building, roomnum AS room_number, 
+	purpose AS meetingreason, starttime, duration
+FROM Meeting
+	JOIN Room ON ( Meeting.RoomID = Room.ID)
+	JOIN Employee ON ( Employee.ID = Meeting.OwnerID)
+WHERE name = 'Alice'
+ORDER BY starttime DESC;
+
+\qecho
+\qecho #8
+\qecho
+SELECT name, phone
+FROM Employee
+WHERE phone LIKE '72%'
+ORDER BY name;
+
+\qecho
+\qecho #9
+\qecho
+SELECT name AS organizer_name, homephone
+FROM Meeting
+	JOIN Employee ON ( Employee.ID = Meeting.OwnerID)
+GROUP BY name, homephone
+ORDER BY name;
+
+\qecho
+\qecho #10
+\qecho
+SELECT building, roomnum, starttime
+FROM Meeting
+	JOIN Room ON ( Meeting.RoomID = Room.ID)
+ORDER BY starttime, roomnum;
+\qecho
+\qecho
+
+

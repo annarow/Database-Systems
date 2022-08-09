@@ -1,0 +1,97 @@
+\qecho Anna Rowena Waldron
+\qecho
+\qecho #1
+\qecho 
+SELECT E.name, COUNT (M.id) AS num_meet
+FROM Employee E
+    LEFT JOIN Attendees A ON( E.id = A.employeeid)
+    LEFT JOIN Meeting M ON (A.meetingid = M.id)
+GROUP BY E.id
+ORDER BY num_meet;
+
+\qecho
+\qecho #2
+\qecho 
+SELECT PT.name, COUNT (PI.id) AS count
+FROM PhoneInfo PI
+	RIGHT JOIN PhoneType PT ON (PI.type = PT.id)
+GROUP BY PT.name
+ORDER BY PT.name;
+
+\qecho
+\qecho #3
+\qecho 
+SELECT Shipper.lastname, shipper.firstname, 
+	COUNT (package.id) AS num_packages
+FROM Package
+	JOIN Shipment ON (Shipment.id = Package.shipmentid)
+	RIGHT JOIN Shipper ON (Shipper.id = Shipment.Shipperid)
+WHERE Package.pickupdate IS NULL
+GROUP BY Shipper.id
+ORDER BY num_packages, lastname, firstname;
+
+\qecho
+\qecho #4
+\qecho 
+SELECT Room.roomnumber, Room.building, COUNT (Meeting.id) AS num_meetings
+FROM Meeting
+	RIGHT JOIN Room ON (Meeting.roomid = Room.id)
+GROUP BY Room.roomnumber, Room.building
+ORDER BY Room.building, Room.roomnumber; 
+
+\qecho
+\qecho #5
+\qecho 
+SELECT Employee.employeenumber, Employee.name
+FROM Employee
+	LEFT JOIN PhoneInfo ON (Employee.id = PhoneInfo.employeeid)
+WHERE PhoneInfo.employeeid IS NULL
+ORDER BY Employee.name;
+
+\qecho
+\qecho #6
+\qecho 
+SELECT Employee.employeenumber, Employee.name
+FROM Employee
+	LEFT JOIN Attendees A ON( Employee.id = A.employeeid)
+	LEFT JOIN Meeting M ON (A.meetingid = M.id)
+WHERE A.employeeid IS NULL
+ORDER BY Employee.id;
+
+\qecho
+\qecho #7
+\qecho 
+SELECT Employee.employeenumber, Employee.name, PhoneInfo.type AS phone_type, PhoneInfo.number
+FROM Employee
+	JOIN PhoneInfo ON (Employee.id = PhoneInfo.employeeid)
+	JOIN (SELECT Employee.employeenumber
+		FROM Employee
+			LEFT JOIN PhoneInfo ON (Employee.id = PhoneInfo.employeeid AND PhoneInfo.type LIKE 'C')
+		WHERE PhoneInfo.number IS NULL
+		ORDER BY Employee.name) AS Table1 ON (Table1.employeenumber = Employee.employeenumber);
+
+\qecho
+\qecho #8
+\qecho 
+SELECT E.employeenumber, E.name
+FROM Employee E
+	JOIN Attendees A ON (E.id = A.employeeid)
+	JOIN Meeting M ON (M.id = A.meetingid)
+WHERE M.purpose LIKE 'Staff'
+GROUP BY E.id
+ORDER BY E.employeenumber;
+
+\qecho
+\qecho #9
+\qecho 
+SELECT E.employeenumber, E.name
+FROM Meeting M
+	JOIN Attendees A ON (M.id = A.meetingid AND M.purpose LIKE 'Staff')
+	RIGHT JOIN Employee E ON (A.employeeid = E.id)
+WHERE M.purpose IS NULL
+GROUP BY E.id
+ORDER BY E.employeenumber;
+
+
+
+ 

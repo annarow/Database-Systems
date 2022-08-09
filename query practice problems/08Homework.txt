@@ -1,0 +1,141 @@
+\qecho 
+\qecho Anna Rowena Waldron
+\qecho
+SELECT current_database();
+\qecho
+CREATE DATABASE hw08;
+\qecho
+\c hw08
+SELECT current_database();
+\qecho
+CREATE TABLE Employee (
+	ID              SERIAL not null,
+	employee_number VARCHAR(10) not null,
+	first_name      VARCHAR(30) not null,
+	middle_name	VARCHAR(30) ,
+	last_name	VARCHAR(30) not null,
+	email		VARCHAR(100) not null unique,
+	supervisor	INTEGER ,
+	
+	Primary Key	(ID),
+	Foreign Key	(supervisor) references 
+			Employee(ID)
+			Deferrable Initially Deferred
+);
+\qecho
+CREATE TABLE Phone_Type	(
+	ID		VARCHAR(2) not null,
+	Description	VARCHAR(15) not null unique,
+
+	Primary Key	(ID)
+);
+\qecho
+CREATE TABLE Phone_Number (
+	ID		SERIAL not null,
+	EmployeeID	INTEGER not null,
+	TypeID		VARCHAR(2) not null,
+	Number		VARCHAR(7) not null,
+
+	Primary Key	(ID),
+	Foreign Key	(EmployeeID) references
+			Employee(ID)
+			Deferrable Initially Deferred,
+	Foreign Key 	(TypeID) references
+			Phone_Type(ID)
+			Deferrable Initially Deferred
+);
+\qecho
+CREATE TABLE State (
+	ID		VARCHAR(2) not null,
+	Name		VARCHAR(20) not null,
+
+	Primary Key	(ID)
+);
+\qecho
+CREATE TABLE Building (
+	ID		SERIAL not null,
+	Building_Name 	VARCHAR(20) not null,
+	Address1	VARCHAR(30) not null,
+	Address2	VARCHAR(30) ,
+	City		VARCHAR(30) not null,
+	Zip		VARCHAR(5) not null,
+	StateID		VARCHAR(2) not null,
+
+	Primary Key	(ID),
+	Foreign Key	(StateID) references
+			State(ID)	
+			Deferrable Initially Deferred
+);
+\qecho
+CREATE TABLE Room (
+	ID		SERIAL not null,
+	Room_Number	VARCHAR(10) not null,
+	BuildingID	INTEGER not null,
+	Capacity	INTEGER not null,
+
+	Primary Key 	(ID),
+	Foreign Key	(BuildingID) references
+			Building(ID)
+			Deferrable Initially Deferred
+);
+\qecho
+CREATE TABLE Meeting (
+	ID		SERIAL not null,
+	RoomID		INTEGER not null,
+	Start_time	TIMESTAMP not null,
+	Duration	INTERVAL not null,
+	Purpose		VARCHAR(30) not null,
+	Agenda		VARCHAR(120) ,
+	Creator		INTEGER not null,
+
+	Primary Key	(ID),
+	Foreign Key	(RoomID) references
+			Room(ID)
+			Deferrable Initially Deferred,
+	Foreign Key	(Creator) references
+			Employee(ID)
+			Deferrable Initially Deferred
+);
+\qecho
+CREATE TABLE Attendees (
+	MeetingID	INTEGER not null,
+	EmployeeID	INTEGER not null,
+
+	Primary Key	(MeetingID, EmployeeID),
+	Foreign Key	(MeetingID) references
+			Meeting(ID)
+			Deferrable Initially Deferred,
+	Foreign Key	(EmployeeID) references
+			Employee(ID)
+			Deferrable Initially Deferred
+);
+\qecho
+\qecho #1
+\qecho
+\d
+\qecho
+\qecho #2
+\qecho
+\d employee
+\qecho
+\qecho #3
+\qecho
+\d meeting
+\qecho
+\qecho #4
+\qecho
+\d room
+\qecho
+\qecho #5
+\qecho
+\d building
+\qecho
+\qecho #6
+\qecho
+\d attendees
+\qecho
+\qecho #7
+\qecho
+\c postgres
+SELECT current_database();
+DROP DATABASE hw08;

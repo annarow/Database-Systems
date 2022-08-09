@@ -1,0 +1,160 @@
+\qecho
+\qecho Anna Rowena Waldron
+\qecho
+\qecho
+\qecho #1
+\qecho
+SELECT m.ID AS id, COUNT (*) AS butsinseat, capacity, creatorid
+FROM Meeting M
+	JOIN Attendees A ON (A.meetingid = M.ID)
+	JOIN Room R ON (R.ID = M.roomid)
+GROUP BY m.ID, r.capacity
+ORDER BY creatorid;
+
+\qecho
+\qecho #2
+\qecho
+--Sorted by what is said in the homework but  it is slightly different in order but correct info
+SELECT employee.name, SUM(Table1.butsinseat) AS attendees, SUM(Table1.capacity) AS capacity, 
+	SUM(Table1.capacity - Table1.butsinseat) AS availseats
+FROM (SELECT m.ID AS id, COUNT (*) AS butsinseat, capacity, creatorid
+	FROM Meeting M
+		JOIN Attendees A ON (A.meetingid = M.ID)
+		JOIN Room R ON (R.ID = M.roomid)
+	GROUP BY m.ID, r.capacity
+	ORDER BY creatorid) AS Table1
+	JOIN Employee ON (Employee.ID = Table1.creatorid)
+GROUP BY Table1.creatorid, employee.name
+ORDER BY availseats;
+
+\qecho
+\qecho #3
+\qecho
+SELECT name, COUNT (*) * .75 As maxmeetings
+FROM Attendees
+	JOIN Employee ON (Employee.ID = Attendees.employeeid)
+	JOIN Meeting ON (Meeting.ID = Attendees.meetingid)
+GROUP BY employee.id
+ORDER by maxmeetings DESC
+LIMIT 1;
+
+\qecho
+\qecho #4
+\qecho
+SELECT employee.name, COUNT (*) AS nummeetings
+FROM Attendees
+	JOIN Employee ON (Employee.ID = Attendees.employeeid)
+	JOIN Meeting ON (Meeting.ID = Attendees.meetingid)
+GROUP BY employee.id
+HAVING COUNT (*) >= (SELECT COUNT (*) * .75 As maxmeetings
+	FROM Attendees
+		JOIN Employee ON (Employee.ID = Attendees.employeeid)
+		JOIN Meeting ON (Meeting.ID = Attendees.meetingid)
+	GROUP BY employee.id
+	ORDER by maxmeetings DESC
+	LIMIT 1)
+ORDER BY nummeetings;
+
+\qecho
+\qecho #5
+\qecho
+SELECT ((used_rooms.meeting_rooms::real / all_rooms.total_rooms)* 100)::integer AS "Util in %"
+	FROM (SELECT COUNT(*) AS meeting_rooms
+		FROM Meeting
+		WHERE Meeting.startTime::date = '2018-03-04' AND Meeting.startTime::time + duration >= '10:00') 
+	AS used_rooms 
+		JOIN (SELECT Count (*) As total_rooms
+			FROM Room ) AS all_rooms ON (true);
+
+\qecho
+\qecho #6
+\qecho
+SELECT E.name, COUNT (*) AS nummeetings, M.starttime
+FROM Meeting M
+	JOIN Attendees A ON (A.MeetingID = M.ID)
+	JOIN Employee E ON (A.EmployeeID = E.ID)
+GROUP BY E.ID, M.starttime
+HAVING COUNT (*) > 1
+ORDER BY E.name;
+
+\qecho
+\qecho #7
+\qecho
+SELECT Temp.phonename AS category, COUNT (*) AS num_employees
+FROM (SELECT DISTINCT E.name, PT.name AS phonename
+	FROM Employee E
+	JOIN PhoneInfo PI ON (E.ID = PI.employeeid)
+	JOIN PhoneType PT ON (PI.Type = PT.ID)) AS Temp
+GROUP BY category
+ORDER BY category;
+
+\qecho
+\qecho #8
+\qecho
+SELECT PhoneType.name AS category, COUNT (*) AS num_listings
+FROM Employee
+	JOIN PhoneInfo ON (Employee.ID = PhoneInfo.employeeid)
+	JOIN PhoneType ON (PhoneInfo.Type = PhoneType.ID)
+GROUP BY PhoneType.name
+ORDER BY PhoneType.name;
+
+\qecho
+\qecho #9
+\qecho
+SELECT meetingid, m.purpose, COUNT (*) AS numphones
+FROM Meeting M
+	JOIN Room R ON (R.ID = M.roomid)
+	JOIN Attendees A ON (A.meetingid = M.ID)
+	JOIN Employee E ON (E.ID = A.employeeid)
+	JOIN PhoneInfo PI ON (PI.employeeid = E.ID)
+	JOIN PhoneType PT ON (PT.ID = PI.type)
+WHERE R.building = 'B' AND PT.name = 'Cell'
+GROUP BY meetingid, m.purpose
+ORDER BY meetingid;
+
+\qecho
+\qecho #10
+\qecho
+SELECT round(AVG(numphones),2) AS avg_phones
+FROM (SELECT meetingid, m.purpose, COUNT (*) AS numphones
+	FROM Meeting M
+		JOIN Room R ON (R.ID = M.roomid)
+		JOIN Attendees A ON (A.meetingid = M.ID)
+		JOIN Employee E ON (E.ID = A.employeeid)
+		JOIN PhoneInfo PI ON (PI.employeeid = E.ID)
+		JOIN PhoneType PT ON (PT.ID = PI.type)
+	WHERE R.building = 'B' AND PT.name = 'Cell'
+	GROUP BY meetingid, m.purpose
+	ORDER BY meetingid) AS Temp;
+
+\qecho
+\qecho #11
+\qecho
+SELECT Temp.purpose, Temp.numphones AS num_phones, Table1.avg_phones
+FROM (SELECT meetingid, m.purpose, COUNT (*) AS numphones
+	FROM Meeting M
+		JOIN Room R ON (R.ID = M.roomid)
+		JOIN Attendees A ON (A.meetingid = M.ID)
+		JOIN Employee E ON (E.ID = A.employeeid)
+		JOIN PhoneInfo PI ON (PI.employeeid = E.ID)
+		JOIN PhoneType PT ON (PT.ID = PI.type)
+	WHERE R.building = 'B' AND PT.name = 'Cell'
+	GROUP BY meetingid, m.purpose
+	ORDER BY meetingid) AS Temp
+	JOIN (SELECT round(AVG(numphones),2) AS avg_phones
+		FROM (SELECT meetingid, m.purpose, COUNT (*) AS numphones
+			FROM Meeting M
+				JOIN Room R ON (R.ID = M.roomid)
+				JOIN Attendees A ON (A.meetingid = M.ID)
+				JOIN Employee E ON (E.ID = A.employeeid)
+				JOIN PhoneInfo PI ON (PI.employeeid = E.ID)
+				JOIN PhoneType PT ON (PT.ID = PI.type)
+			WHERE R.building = 'B' AND PT.name = 'Cell'
+			GROUP BY meetingid, m.purpose
+			ORDER BY meetingid) AS Temp) AS Table1 ON (true)
+GROUP BY Temp.purpose, Temp.numphones, Temp.meetingid, Table1.avg_phones
+ORDER BY Temp.purpose, Temp.meetingid;
+
+
+
+

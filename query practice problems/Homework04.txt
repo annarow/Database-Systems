@@ -1,0 +1,135 @@
+\qecho Anna Rowena Waldron
+\qecho
+\qecho #1
+\qecho
+SELECT building, COUNT (*) AS num_meetings
+FROM Meeting
+	JOIN Room ON ( Meeting.RoomID = Room.ID)
+GROUP BY building
+ORDER BY building;
+
+\qecho
+\qecho #2
+\qecho
+SELECT building, roomNumber, startTime, starttime + duration AS endTime 
+FROM Meeting
+	JOIN Room ON (Meeting.RoomID = Room.ID)
+WHERE Room.building = 'A'
+ORDER BY startTime, roomNumber;
+
+\qecho
+\qecho #3 
+\qecho
+SELECT room.building, room.roomNumber, COUNT (*) AS nummeetings
+FROM Meeting
+	JOIN Room ON (Meeting.RoomID = Room.ID)
+GROUP BY room.roomNumber, room.building
+ORDER BY building, roomNumber;
+	
+\qecho
+\qecho #4
+\qecho
+SELECT meeting.Purpose, meeting.starttime
+FROM Meeting
+WHERE meeting.Moderatorid IS NULL
+ORDER BY meeting.Starttime;
+
+\qecho
+\qecho #5
+\qecho
+SELECT meeting.purpose, meeting.Starttime, COUNT(*) AS num_attendees
+FROM Meeting
+	JOIN Attendees ON ( Meeting.ID = Attendees.meetingID)
+GROUP BY meeting.ID
+ORDER BY starttime, purpose;
+
+\qecho
+\qecho #6
+\qecho
+SELECT Meeting.purpose, Meeting.startTime, COUNT (*) AS num_attendees, 
+Room.capacity - COUNT(*) AS seats_available
+FROM Meeting
+	JOIN Attendees ON ( Meeting.ID = Attendees.MeetingID)
+	JOIN Room ON ( Meeting.RoomID = room.ID)
+GROUP BY Meeting.ID, Room.ID
+ORDER BY seats_available ASC, startTime;
+
+\qecho
+\qecho #7
+\qecho
+SELECT employee.name, meeting.purpose
+FROM Meeting
+	JOIN Employee ON (Employee.ID = Meeting.Moderatorid)
+GROUP BY Meeting.purpose, employee.name
+ORDER BY name;
+
+\qecho
+\qecho #8
+\qecho
+SELECT name AS moderator, COUNT (*) AS num_meetings
+FROM Meeting
+	JOIN Employee ON (Employee.ID = Meeting.Moderatorid)
+GROUP BY moderator
+ORDER BY name;
+
+\qecho
+\qecho #9
+\qecho
+SELECT E.name, COUNT (*) AS num_meetings
+FROM Meeting M
+	JOIN Attendees A ON (A.MeetingID = M.ID)
+	JOIN Employee E ON (A.EmployeeID = E.ID)
+GROUP BY E.ID
+ORDER BY num_meetings DESC
+LIMIT 1;
+
+\qecho
+\qecho #10
+\qecho
+SELECT name, purpose, starttime, building, roomnumber
+FROM Meeting M
+	JOIN Attendees A ON (A.MeetingID = M.ID)
+	JOIN Employee E ON (A.EmployeeID = E.ID)
+	JOIN Room R ON ( M.RoomID = R.ID)
+WHERE starttime <= '2018-03-18 10:00:00' AND starttime + duration >= '2018-03-18 10:00:00'
+ORDER BY building, roomnumber;
+
+\qecho
+\qecho #11
+\qecho
+SELECT name AS category, COUNT (*) AS count
+FROM PhoneInfo
+	JOIN PhoneType ON (PhoneType.ID = PhoneInfo.type)
+GROUP BY category
+ORDER BY category;
+
+\qecho
+\qecho #12
+\qecho
+SELECT E.name AS attendee, PhoneInfo.number AS cell_number 
+FROM Meeting M
+	JOIN Attendees A ON (A.MeetingID = M.ID)
+	JOIN Employee E ON (A.EmployeeID = E.ID)
+	JOIN PhoneInfo ON (E.ID = PhoneInfo.EmployeeID)
+	JOIN PhoneType ON (PhoneType.ID = PhoneInfo.type)
+WHERE M.starttime::date = '2018-03-28' AND M.purpose = 'Lunch' AND PhoneType.name = 'Cell'
+ORDER BY E.name;
+
+\qecho
+\qecho #13
+\qecho
+--Ordered by name due to instruction even though output given didn't sort by name
+SELECT E.name, COUNT (*) AS nummeetings, M.starttime
+FROM Meeting M
+	JOIN Attendees A ON (A.MeetingID = M.ID)
+	JOIN Employee E ON (A.EmployeeID = E.ID)
+GROUP BY E.ID, M.starttime
+HAVING COUNT (*) > 1
+ORDER BY E.name;
+
+
+
+
+
+
+
