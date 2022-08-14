@@ -1,2 +1,2 @@
 # Database-Systems
-css475 Database queries problems and project
+css475 Database queries problems and project using SQL
